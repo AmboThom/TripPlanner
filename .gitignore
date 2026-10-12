@@ -13,6 +13,9 @@
 # testing
 /coverage
 
+# local trip database
+/data
+
 # next.js
 /.next/
 /out/
@@ -39,3 +42,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# AI Blueprint local workflow files
+.claude/
+blueprint/
+CLAUDE.md
