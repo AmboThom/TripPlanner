@@ -49,10 +49,12 @@ Package manager: **npm** (`package-lock.json`).
 - Build: `npm run build`
 - Production server: `npm run start`
 - Lint: `npm run lint`
+- Tests: `npm run test` (Vitest, single run)
+- Tests, watch: `npm run test:watch`
 
 No typecheck script exists; `npm run build` runs TypeScript as part of the build.
 
-**No test command is configured, so there is no test gate yet.** Do not treat
-tests as a required check until a real runner is added.
+**A test command is configured, so tests are the gate for logic-bearing steps.**
 
-No combined `Verify` command and no GitHub workflow exist yet.
+No combined `Verify` command and no GitHub workflow exist yet. `/ci` owns that
+setup if you want it.
