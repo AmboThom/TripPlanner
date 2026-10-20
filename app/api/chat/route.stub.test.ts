@@ -14,6 +14,7 @@ type Mode =
   | "loop" // asks for list_pages on every request, forever
   | "slow" // same, but each reply takes 120ms
   | "reject" // 400s the turn
+  | "credits" // 400s the turn the way the API does when the account is out of credits
   | "text" // one finished text reply
   | "refusal" // the model refuses
   | "drop" // sends part of a reply, then cuts the connection
@@ -21,7 +22,16 @@ type Mode =
   | "failtool"; // asks for a write_page, then finishes
 
 let mode: Mode = "loop";
-let preflightStatus = 200;
+// What the credential preflight answers. Overridden per test; reset before each.
+type Preflight = { status: number; type: string; body: string };
+const OK_PREFLIGHT: Preflight = {
+  status: 200,
+  type: "application/json",
+  body: JSON.stringify({ id: "claude-opus-5", type: "model", display_name: "stub", created_at: "2026-01-01T00:00:00Z" }),
+};
+let preflight: Preflight = OK_PREFLIGHT;
+const CREDITS_SENTENCE =
+  "Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.";
 let messageRequests = 0;
 let requestBodies: string[] = [];
 let server: Server;
@@ -84,6 +94,16 @@ function reply(res: ServerResponse) {
           ? sse([start(), ...toolBlock(0, "write_page", { title: "Flights", body: "x", expected_updated_at: null }), ...finish("tool_use")])
           : sse([start(), ...textBlock(0, "That did not save."), ...finish("end_turn")]),
       );
+    case "credits":
+      res.statusCode = 400;
+      res.setHeader("content-type", "application/json");
+      return res.end(
+        JSON.stringify({
+          type: "error",
+          error: { type: "invalid_request_error", message: CREDITS_SENTENCE },
+          request_id: "req_011CSTUBREQUESTID",
+        }),
+      );
     default:
       res.statusCode = 400;
       res.setHeader("content-type", "application/json");
@@ -98,13 +118,9 @@ let assistant: typeof import("@/lib/assistant");
 beforeAll(async () => {
   server = createServer((req, res) => {
     if (req.method === "GET" && req.url?.startsWith("/v1/models/")) {
-      res.statusCode = preflightStatus;
-      res.setHeader("content-type", "application/json");
-      res.end(
-        preflightStatus === 200
-          ? JSON.stringify({ id: "claude-opus-5", type: "model", display_name: "stub", created_at: "2026-01-01T00:00:00Z" })
-          : JSON.stringify({ type: "error", error: { type: "authentication_error", message: "invalid x-api-key" } }),
-      );
+      res.statusCode = preflight.status;
+      res.setHeader("content-type", preflight.type);
+      res.end(preflight.body);
       return;
     }
     messageRequests++;
@@ -131,7 +147,7 @@ afterAll(() => {
 beforeEach(() => {
   messageRequests = 0;
   requestBodies = [];
-  preflightStatus = 200;
+  preflight = OK_PREFLIGHT;
 });
 
 const post = (message: string, signal?: AbortSignal) =>
@@ -259,11 +275,71 @@ describe("a turn the upstream rejects", () => {
     expect(stored).not.toMatch(/stub rejected the turn/);
   });
 
+  // A real user hit this: an account with no credits passes the free preflight, so the
+  // refusal arrives inside the stream, after the 200. It used to be shown as the SDK's
+  // raw string, a JSON blob with the useful sentence buried in it and a request id.
+  test("shows the API's own sentence, not the raw error body", async () => {
+    mode = "credits";
+
+    const text = await readAll(await post("im looking to fly to nyc from atl in 2 months"));
+
+    expect(text.trim()).toBe(`[The turn failed: ${CREDITS_SENTENCE}]`);
+    expect(text).not.toContain("{");
+    expect(text).not.toContain("request_id");
+    expect(text).not.toContain("req_011CSTUBREQUESTID");
+    expect(text).not.toContain('"type"');
+  });
+
+  test("and still stores nothing as something the assistant said", async () => {
+    mode = "credits";
+    const before = assistantTurns().length;
+
+    await readAll(await post("anything"));
+
+    expect(assistantTurns().length).toBe(before);
+    expect(store.listMessages().map((m) => m.content).join("\n")).not.toContain("credit balance");
+  });
+
+  test("a preflight the API rejects with a sentence gives that sentence as a 502", async () => {
+    mode = "text";
+    preflight = {
+      status: 403,
+      type: "application/json",
+      body: JSON.stringify({
+        type: "error",
+        error: { type: "permission_error", message: "Your account is not permitted to use this model." },
+        request_id: "req_011CSTUBREQUESTID",
+      }),
+    };
+
+    const response = await post("hello");
+    const payload = (await response.json()) as { error: string };
+
+    expect(response.status).toBe(502);
+    expect(payload.error).toBe("Your account is not permitted to use this model.");
+  });
+
+  test("a preflight failure with no JSON body gives a status sentence as a 502", async () => {
+    mode = "text";
+    preflight = { status: 404, type: "text/html", body: "<html>nothing here</html>" };
+
+    const response = await post("hello");
+    const payload = (await response.json()) as { error: string };
+
+    expect(response.status).toBe(502);
+    expect(payload.error).toBe("The Anthropic API returned an error (status 404).");
+    expect(payload.error).not.toContain("<html>");
+  });
+
   // F-20. The credential preflight is the only place a bad key can still become a
   // real status code, so the mapping needs its own evidence.
   test("a key the API rejects is a 502 that names the variable", async () => {
     mode = "text";
-    preflightStatus = 401;
+    preflight = {
+      status: 401,
+      type: "application/json",
+      body: JSON.stringify({ type: "error", error: { type: "authentication_error", message: "invalid x-api-key" } }),
+    };
 
     const response = await post("hello");
 

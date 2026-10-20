@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { apiErrorSentence } from "@/lib/api-error";
 import { MODEL, buildTurnParams } from "@/lib/assistant";
 import { appendMessage, listMessages, listPages } from "@/lib/db";
 
@@ -26,7 +27,7 @@ function upstream(error: unknown): Response {
     return problem(502, "The Anthropic API is rate limiting this key. Try again shortly.");
   }
   if (error instanceof Anthropic.APIError) {
-    return problem(502, `The Anthropic API failed: ${error.message}`);
+    return problem(502, apiErrorSentence(error));
   }
   // Deliberately generic, and never rethrown. A failure that is not an API error
   // can be a TypeError from fetch whose message quotes the rejected header value,
@@ -160,7 +161,7 @@ export async function POST(request: Request): Promise<Response> {
       } catch (error) {
         send(
           error instanceof Anthropic.APIError
-            ? `\n\n[The turn failed: ${error.message}]`
+            ? `\n\n[The turn failed: ${apiErrorSentence(error)}]`
             : "\n\n[The turn failed before it finished.]",
         );
       } finally {
