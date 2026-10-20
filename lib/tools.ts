@@ -10,10 +10,14 @@ import {
 /**
  * The store refuses a stale or duplicate write by throwing, and those messages
  * were written to tell the caller what to do next. Returned as a tool result the
- * assistant reads them and retries. Thrown, the runner aborts and the turn dies.
+ * assistant reads them and retries.
  *
- * Anything else is a real failure and must reach the unexpected-error path
- * rather than being handed to the model as an ordinary result.
+ * Anything else is a real failure and is rethrown. The SDK's tool runner catches
+ * every throw from a tool and reports it to the model as an is_error result, so
+ * the turn does not abort and the route's own catch is never reached. What the
+ * rethrow buys is that the model is told the call failed, instead of being handed
+ * text that reads like the retry guidance above and retrying against a store that
+ * cannot succeed. The outcome is pinned in app/api/chat/route.stub.test.ts.
  */
 function storeGuidance(error: unknown): string {
   if (error instanceof StalePageWriteError || error instanceof PageExistsError) {
