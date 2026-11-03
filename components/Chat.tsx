@@ -12,6 +12,10 @@ import styles from "./Chat.module.css";
 const INVITATION =
   "Tell me about your trip. Where you're going, what you've booked, what you're thinking about.";
 
+// autocomplete on a button is non-standard, so React's types do not list it, but Firefox
+// reads it. Spread rather than written inline so the typing is not bypassed on the element.
+const NO_STATE_RESTORE = { autoComplete: "off" };
+
 /** Drops the placeholder reply bubble if the turn produced no text at all. */
 function withoutEmptyReply(messages: ChatMessage[]): ChatMessage[] {
   const last = messages[messages.length - 1];
@@ -151,7 +155,14 @@ export default function Chat({ initialMessages }: { initialMessages: ChatMessage
         </div>
       )}
 
-      <form className={styles.composer} onSubmit={onSubmit}>
+      {/*
+        autoComplete="off" on the form and on the button. Firefox, unlike other browsers,
+        restores a button's dynamic disabled state after a reload. The server renders Send
+        disabled; once the user has typed, Firefox puts back "enabled", and React then
+        reports a hydration mismatch on this button. It also stops the browser refilling
+        the textarea with a draft that the component's state does not know about.
+      */}
+      <form className={styles.composer} onSubmit={onSubmit} autoComplete="off">
         <div className={styles.field}>
           <label htmlFor="message" className={styles.visuallyHidden}>
             Message
@@ -166,7 +177,12 @@ export default function Chat({ initialMessages }: { initialMessages: ChatMessage
             onChange={(event) => setDraft(event.target.value)}
             onKeyDown={onKeyDown}
           />
-          <button type="submit" className={styles.send} disabled={sending || !draft.trim()}>
+          <button
+            type="submit"
+            className={styles.send}
+            {...NO_STATE_RESTORE}
+            disabled={sending || !draft.trim()}
+          >
             Send
           </button>
         </div>

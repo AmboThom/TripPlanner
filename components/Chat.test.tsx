@@ -56,6 +56,17 @@ describe("accessibility of the first render", () => {
     expect(html).toMatch(/<textarea[^>]*id="message"/);
   });
 
+  // Firefox restores a button's dynamic disabled state on reload, so the server's
+  // "disabled" can reach React as "enabled" and fail hydration. These attributes are what
+  // switch that off, and nothing else in the suite would notice them going missing.
+  test("the composer form opts out of browser form-state restoration", () => {
+    expect(html).toMatch(/<form[^>]*autoComplete="off"|<form[^>]*autocomplete="off"/i);
+  });
+
+  test("the Send button opts out too", () => {
+    expect(html).toMatch(/<button[^>]*type="submit"[^>]*autocomplete="off"|<button[^>]*autocomplete="off"[^>]*type="submit"/i);
+  });
+
   test("starts with nothing to send and no error showing", () => {
     expect(html).toMatch(/<button[^>]*type="submit"[^>]*disabled/);
     expect(html).not.toContain('role="alert"');

@@ -11,6 +11,8 @@
   --ink-3: #666d78;
   --line: #e4e6eb;
   --bubble: #f2f4f6;
+  --rail: #f5f6f8;
+  --hover: #edeff2;
   --accent: #16181d;
   --accent-hover: #000000;
   --on-accent: #ffffff;
@@ -30,6 +32,8 @@
     --ink-3: #8f96a1;
     --line: #282b31;
     --bubble: #1e2126;
+    --rail: #131518;
+    --hover: #212429;
     --accent: #e8eaed;
     --accent-hover: #ffffff;
     --on-accent: #101215;

@@ -1,0 +1,350 @@
+/* Ported from the shell, rail and page pane of demo.html. Colors come from globals.css. */
+
+.shell {
+  --rail-width: 15.75rem;
+  --pane-chat-width: 28.5rem;
+
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  /* The middle column is 0fr until a page opens, so the chat takes the room. */
+  grid-template-columns: var(--rail-width) 0fr minmax(0, 1fr);
+  transition: grid-template-columns 0.42s cubic-bezier(0.22, 0.7, 0.2, 1);
+}
+
+.open {
+  grid-template-columns: var(--rail-width) minmax(0, 1fr) minmax(0, var(--pane-chat-width));
+}
+
+/* ---------- page list ---------- */
+
+.rail {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--rail);
+  border-right: 1px solid var(--line);
+}
+
+.railHead {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  padding: 16px 16px 9px;
+}
+
+.eyebrow,
+.count {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 10.5px;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-3);
+}
+
+.none {
+  padding: 4px 16px;
+  color: var(--ink-3);
+  font-size: 13px;
+}
+
+.list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  list-style: none;
+  padding: 0 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pageButton {
+  display: block;
+  width: 100%;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.pageButton:hover {
+  background: var(--hover);
+}
+
+.pageButton[aria-current="true"] {
+  background: var(--panel);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+/* ---------- the middle region ---------- */
+
+.paneSlot {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.open .paneSlot {
+  border-right: 1px solid var(--line);
+}
+
+.pane {
+  height: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+}
+
+.paneHead {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 22px;
+  border-bottom: 1px solid var(--line);
+}
+
+.paneTitle {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.paneTitle:focus-visible {
+  outline-offset: 4px;
+}
+
+.close {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ink-3);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.close:hover {
+  border-color: var(--ink-3);
+  color: var(--ink);
+}
+
+.paneBody {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 26px 22px 40px;
+}
+
+.prose {
+  max-width: 60ch;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 15.5px;
+  line-height: 1.62;
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+
+.prose > :first-child {
+  margin-top: 0;
+}
+
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4 {
+  margin: 26px 0 8px;
+  color: var(--ink);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.01em;
+}
+
+.prose h1 {
+  font-size: 18px;
+}
+
+.prose h2 {
+  font-size: 15px;
+}
+
+.prose h3,
+.prose h4 {
+  font-size: 14px;
+}
+
+.prose p {
+  margin: 0 0 10px;
+}
+
+.prose ul,
+.prose ol {
+  margin: 0 0 10px;
+  padding-left: 1.3em;
+}
+
+.prose li {
+  margin: 3px 0;
+}
+
+.prose strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.prose a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.prose code {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--bubble);
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.88em;
+}
+
+.prose pre {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  overflow-x: auto;
+  border-radius: 8px;
+  background: var(--bubble);
+}
+
+.prose pre code {
+  padding: 0;
+  background: none;
+}
+
+.prose blockquote {
+  margin: 0 0 10px;
+  padding-left: 12px;
+  border-left: 2px solid var(--line);
+}
+
+.prose hr {
+  margin: 18px 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+}
+
+.paneFoot {
+  flex: 0 0 auto;
+  padding: 10px 22px;
+  border-top: 1px solid var(--line);
+  color: var(--ink-3);
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 10.5px;
+}
+
+/* ---------- chat ---------- */
+
+.chatSlot {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- narrow screens ---------- */
+
+/*
+ * Three columns do not fit. The page list becomes a scrolling row above the chat, so
+ * pages stay reachable (the demo hid it here, which stranded them). An opened page
+ * covers the chat: the one place it does, because there is no room beside it. The chat
+ * stays mounted underneath, so closing the page loses nothing.
+ */
+@media (max-width: 900px) {
+  .shell,
+  .open {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+
+  .rail {
+    grid-row: 1;
+    grid-column: 1;
+    flex-direction: row;
+    align-items: center;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .railHead {
+    padding: 8px 4px 8px 16px;
+  }
+
+  .none {
+    padding: 8px 16px 8px 4px;
+  }
+
+  .list {
+    flex-direction: row;
+    gap: 4px;
+    padding: 6px 12px 6px 4px;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .pageButton {
+    width: auto;
+    white-space: nowrap;
+  }
+
+  .paneSlot,
+  .chatSlot {
+    grid-row: 2;
+    grid-column: 1;
+  }
+
+  .paneSlot {
+    z-index: 1;
+    background: var(--panel);
+  }
+
+  .shell:not(.open) .paneSlot {
+    display: none;
+  }
+
+  .open .paneSlot {
+    border-right: 0;
+  }
+
+  /* Hidden, not removed: out of the tab order and the accessibility tree while the
+     page covers it, but its draft and scroll position are kept. */
+  .open .chatSlot {
+    visibility: hidden;
+  }
+
+  .paneHead,
+  .paneBody,
+  .paneFoot {
+    padding-inline: 16px;
+  }
+}
