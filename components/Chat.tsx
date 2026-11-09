@@ -22,7 +22,13 @@ function withoutEmptyReply(messages: ChatMessage[]): ChatMessage[] {
   return last && last.role === "assistant" && last.content === "" ? messages.slice(0, -1) : messages;
 }
 
-export default function Chat({ initialMessages }: { initialMessages: ChatMessage[] }) {
+type Props = {
+  initialMessages: ChatMessage[];
+  /** Called once when a turn is over, whatever its outcome, unless the chat was left mid-turn. */
+  onTurnEnd?: () => void;
+};
+
+export default function Chat({ initialMessages, onTurnEnd }: Props) {
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
@@ -92,6 +98,7 @@ export default function Chat({ initialMessages }: { initialMessages: ChatMessage
         setWaiting(false);
         setSending(false);
         inputRef.current?.focus();
+        onTurnEnd?.();
       }
     }
   }

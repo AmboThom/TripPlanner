@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import type { ChatMessage } from "@/lib/chat-client";
 import type { PageView } from "@/lib/pages-client";
@@ -17,6 +18,7 @@ type Props = { initialMessages: ChatMessage[]; pages: PageView[] };
  * all survive.
  */
 export default function Workspace({ initialMessages, pages }: Props) {
+  const router = useRouter();
   const [selectedTitle, setSelectedTitle] = useState<string | null>(null);
   const selected = pages.find((page) => page.title === selectedTitle) ?? null;
 
@@ -58,7 +60,10 @@ export default function Workspace({ initialMessages, pages }: Props) {
       </div>
 
       <div className={styles.chatSlot}>
-        <Chat initialMessages={initialMessages} />
+        {/* A finished turn may have filed or rewritten pages. Refreshing re-runs the
+            server page for fresh props and keeps client state, so the chat and the open
+            page are not remounted. */}
+        <Chat initialMessages={initialMessages} onTurnEnd={() => router.refresh()} />
       </div>
     </div>
   );

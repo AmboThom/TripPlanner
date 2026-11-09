@@ -3,7 +3,11 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { beforeAll, describe, expect, test } from "vitest";
+import { beforeAll, describe, expect, test, vi } from "vitest";
+
+// Workspace calls useRouter, which throws when no app router is mounted, as under
+// renderToStaticMarkup. Only the first render is checked here, so a stub is enough.
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 
 process.env.TRIP_DB_PATH = join(mkdtempSync(join(tmpdir(), "trip-page-")), "test.db");
 
